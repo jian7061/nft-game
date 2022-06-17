@@ -33,6 +33,9 @@ async function main() {
   let txn;
   txn = await gameContract.mintCharacterNFT(2);
   await txn.wait();
+
+  let returnedTokenUri = await gameContract.getTokenUri(1);
+  console.log(returnedTokenUri);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
