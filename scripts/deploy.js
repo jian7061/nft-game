@@ -23,7 +23,11 @@ async function main() {
       "https://i.imgur.com/WMB6g9u.png",
     ],
     [100, 200, 300], // HP values
-    [100, 50, 25] // Attack damage values
+    [100, 50, 25], // Attack damage values
+    "Elon Musk", // Boss name
+    "https://i.imgur.com/AksR0tt.png", // Boss image
+    10000, // Boss hp
+    50 // Boss attack damage
   );
 
   await gameContract.deployed();
@@ -31,11 +35,26 @@ async function main() {
   console.log("Game contract deployed to:", gameContract.address);
 
   let txn;
-  txn = await gameContract.mintCharacterNFT(2);
+  // txn = await gameContract.mintCharacterNFT(0);
+  // await txn.wait();
+  // console.log("Minted NFT #1");
+
+  txn = await gameContract.mintCharacterNFT(1);
+  await txn.wait();
+  console.log("Minted NFT #2");
+
+  // txn = await gameContract.mintCharacterNFT(2);
+  // await txn.wait();
+  // console.log("Minted NFT #3");
+
+  txn = await gameContract.attackBoss();
   await txn.wait();
 
-  let returnedTokenUri = await gameContract.getTokenUri(1);
-  console.log(returnedTokenUri);
+  txn = await gameContract.attackBoss();
+  await txn.wait();
+
+  // let returnedTokenUri = await gameContract.getTokenUri(1);
+  // console.log(returnedTokenUri);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

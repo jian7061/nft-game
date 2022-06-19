@@ -21,6 +21,15 @@ contract MyEpicGame is ERC721 {
     }
     CharacterAttributes[] defaultCharacters;
 
+    struct BigBoss {
+        string name;
+        string imageUri;
+        uint hp;
+        uint maxHp;
+        uint attackDamage;
+    }
+    BigBoss public bigBoss;
+
     mapping (uint256 => CharacterAttributes) tokenIdToAttributes;
 
     mapping (address => uint256) ownerToTokenId;
@@ -29,10 +38,23 @@ contract MyEpicGame is ERC721 {
         string[] memory characterNames,
         string[] memory characterImageURIs,
         uint[] memory characterHp,
-        uint[] memory characterAttackDmg
+        uint[] memory characterAttackDmg,
+        string memory bossName,
+        string memory bossImageURI,
+        uint bossHp,
+        uint bossAttackDamage
     )
     ERC721("Heroes","HERO")
      {
+         //initialize the boss.
+         bigBoss = BigBoss ({
+         name: bossName,
+         imageUri: bossImageURI,
+         hp: bossHp,
+         maxHp: bossHp,
+         attackDamage: bossAttackDamage
+    });
+    console.log("Done Initializing boss %s w/ HP %s, img %s", bigBoss.name, bigBoss.hp, bigBoss.imageUri);
         for(uint i = 0; i < characterNames.length; i++) {
             defaultCharacters.push(CharacterAttributes({
                 characterIndex : i,
@@ -71,11 +93,11 @@ contract MyEpicGame is ERC721 {
     function getTokenUri(uint256 _tokenId) public view returns(string memory) {
         CharacterAttributes memory charAttributes = tokenIdToAttributes[_tokenId];
 
-  string memory strHp = Strings.toString(charAttributes.hp);
-  string memory strMaxHp = Strings.toString(charAttributes.maxHp);
-  string memory strAttackDamage = Strings.toString(charAttributes.attackDamage);
+        string memory strHp = Strings.toString(charAttributes.hp);
+        string memory strMaxHp = Strings.toString(charAttributes.maxHp);
+        string memory strAttackDamage = Strings.toString(charAttributes.attackDamage);
 
-  string memory json = Base64.encode(
+        string memory json = Base64.encode(
     abi.encodePacked(
       '{"name": "',
       charAttributes.name,
@@ -88,11 +110,41 @@ contract MyEpicGame is ERC721 {
     )
   );
 
-  string memory output = string(
+        string memory output = string(
     abi.encodePacked("data:application/json;base64,", json)
   );
   
-  return output;
+        return output;
 
     }
+    function attackBoss() public {
+        uint256 tokenIdOfPlayer = ownerToTokenId[msg.sender];
+        // If we were to use memory instead of storage it would create a local copy of the variable 
+        // within the scope of the function. That means if we did player.hp = 0 
+        // it would only be that way within the function and wouldn't change the global value.
+        CharacterAttributes storage player = tokenIdToAttributes[tokenIdOfPlayer];
+        console.log("Player name: %s, hp: %s, attackDamage: %s", player.name, player.hp, player.attackDamage);
+        console.log("Boss name: %s, hp: %s, attackDamage: %s", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
+
+        require(player.hp > 0,"Error: character must have HP to attack boss");
+        require(bigBoss.hp > 0,"Error: boss must have HP");
+
+        // player attack boss
+        if(bigBoss.hp < player.attackDamage) {
+            bigBoss.hp = 0;
+        } else {
+            bigBoss.hp = bigBoss.hp - player.attackDamage;
+        }
+        
+        // boss attack player
+        if(player.hp < bigBoss.attackDamage) {
+            player.hp = 0;
+        } else {
+            player.hp = player.hp - bigBoss.attackDamage;
+        }
+
+        console.log("Player attack boss. New boss hp: %s", bigBoss.hp);
+        console.log("Boss attack player. New player hp: %s", player.hp);
+    }
+
 }
